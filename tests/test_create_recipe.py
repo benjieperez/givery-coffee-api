@@ -77,6 +77,17 @@ async def test_create_recipe_validation_error():
             json=payload
         )
 
-    assert response.status_code == 422
+    
+    assert response.status_code == 200
+    
+    data = response.json()
+    assert data["message"] == "Recipe creation failed!"
+
+    missing_fields = data["required"].split(", ")
+
+    assert "making_time" in missing_fields
+    assert "serves" in missing_fields
+    assert "ingredients" in missing_fields
+    assert "cost" in missing_fields
 
     await close_db()
