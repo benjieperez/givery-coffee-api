@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+tortoise-orm
+asyncmy
+python-dotenv
