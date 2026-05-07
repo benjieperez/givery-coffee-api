@@ -3,11 +3,6 @@ from tortoise.models import Model
 
 
 class Recipe(Model):
-    """
-    Tortoise ORM model — maps directly to the `recipes` MySQL table.
-    Field types mirror the original sql/create.sql schema exactly.
-    """
-
     id          = fields.IntField(pk=True)
     title       = fields.CharField(max_length=100)
     making_time = fields.CharField(max_length=100)

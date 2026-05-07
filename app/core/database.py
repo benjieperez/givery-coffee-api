@@ -9,7 +9,7 @@ TORTOISE_ORM_CONFIG = {
         "default": {
             "engine":      "tortoise.backends.mysql",
             "credentials": {
-                "host":     None,   # filled at runtime from DB_URI
+                "host":     None,
                 "port":     None,
                 "user":     None,
                 "password": None,
@@ -52,7 +52,6 @@ def _parse_uri(uri: str) -> dict:
 
 
 async def init_db() -> None:
-    """Connect Tortoise ORM to MySQL and generate schemas if needed."""
     uri = os.getenv("DB_URI")
     if not uri:
         raise RuntimeError("DB_URI is not set in your .env file")
@@ -61,9 +60,8 @@ async def init_db() -> None:
     TORTOISE_ORM_CONFIG["connections"]["default"]["credentials"] = creds
 
     await Tortoise.init(config=TORTOISE_ORM_CONFIG)
-    await Tortoise.generate_schemas(safe=True)   # CREATE TABLE IF NOT EXISTS
+    await Tortoise.generate_schemas(safe=True)
 
 
 async def close_db() -> None:
-    """Gracefully close all Tortoise connections."""
     await Tortoise.close_connections()

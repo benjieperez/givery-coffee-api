@@ -4,24 +4,11 @@ from app.models.recipe import Recipe
 
 
 class RecipeRepository:
-    """
-    Data-access layer — all database operations go through Tortoise ORM querysets.
-    No raw SQL. No connection management. Fully async.
-    """
-
-    # ------------------------------------------------------------------
-    # Read
-    # ------------------------------------------------------------------
-
     async def get_all(self) -> list[Recipe]:
         return await Recipe.all()
 
     async def get_by_id(self, recipe_id: int) -> Optional[Recipe]:
         return await Recipe.get_or_none(id=recipe_id)
-
-    # ------------------------------------------------------------------
-    # Write
-    # ------------------------------------------------------------------
 
     async def create(
         self,
