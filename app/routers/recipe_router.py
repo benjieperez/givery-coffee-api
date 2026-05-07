@@ -64,7 +64,7 @@ class RecipeRouter:
     async def update(self, id: int, payload: RecipeUpdateSchema) -> JSONResponse:
         recipe = await self._repo.get_by_id(id)
         if recipe is None:
-            return JSONResponse(status_code=200, content={"message": "No recipe found"})
+            return JSONResponse(status_code=404, content={"message": "No recipe found"})
         fields = {k: v for k, v in payload.model_dump().items() if v is not None}
         updated = await self._repo.update(id, fields)
         return JSONResponse(status_code=200, content={
@@ -75,7 +75,7 @@ class RecipeRouter:
     async def delete(self, id: int) -> JSONResponse:
         deleted = await self._repo.delete(id)
         if not deleted:
-            return JSONResponse(status_code=200, content={"message": "No recipe found"})
+            return JSONResponse(status_code=404, content={"message": "No recipe found"})
         return JSONResponse(status_code=200, content={
             "message": "Recipe successfully removed!",
         })
