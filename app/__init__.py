@@ -31,8 +31,7 @@ def create_app() -> FastAPI:
         version="1.0.0",
         lifespan=lifespan,
     )
-
-    # ✅ Register exception handler FIRST
+    
     application.add_exception_handler(RequestValidationError, validation_exception_handler)
 
     register_tortoise(
