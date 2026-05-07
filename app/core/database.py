@@ -1,67 +1,77 @@
-import os
-from dotenv import load_dotenv
 from tortoise import Tortoise
+from tortoise.exceptions import DBConnectionError
+from decouple import config as env
+from urllib.parse import quote_plus
 
-load_dotenv()
+class Database:
+    def __init__(self):
+        self.db_engine = env("DB_ENGINE")
+        self.db_user = env("DB_USER")
+        self.db_password = quote_plus(env("DB_PASSWORD"))
+        self.db_name = env("DB_NAME")
+        self.db_host = env('DB_HOST', default='localhost')  # with default fallback
+        self.db_port = env("DB_PORT")
 
-TORTOISE_ORM_CONFIG = {
-    "connections": {
-        "default": {
-            "engine":      "tortoise.backends.mysql",
+    def database_db_creds(self, username, password, database_name):
+        """Generate the Database Credentials"""
+
+        if self.db_engine == "postgres":
+            tortoise_db_engine = "tortoise.backends.asyncpg"
+        elif self.db_engine in ["mysql", "mariadb"]:
+            tortoise_db_engine = "tortoise.backends.mysql"
+        elif self.db_engine in ["sqlite"]:
+            tortoise_db_engine = "tortoise.backends.aiosqlite"
+
+        default_credentials = {
+            "engine": tortoise_db_engine, #Use specific driver for specific DB_ENGINE
             "credentials": {
-                "host":     None,
-                "port":     None,
-                "user":     None,
-                "password": None,
-                "database": None,
-                "ssl":      True,
+                "database": self.db_name,
+                "host": self.db_host,
+                "port": self.db_port,
+                "user": self.db_user,
+                "password": self.db_password
+            }
+        }
+
+        return default_credentials
+
+    async def init_db(self):
+        """Initialize the database connection and generate the schemas."""
+        default_db_creds = self.database_db_creds(
+            username=self.db_user,
+            password=self.db_password,
+            database_name=self.db_name,
+        )
+        
+        DATABASE_CONFIG = {
+            "connections": {
+                "default": default_db_creds
             },
+            "apps": {
+                "models": {
+                    "models": ["app.models"],
+                    "default_connection": "default",
+                }
+            }
         }
-    },
-    "apps": {
-        "models": {
-            "models":           ["app.models.recipe"],
-            "default_connection": "default",
-        }
-    },
-    "use_tz": False,
-}
 
+        # Initialize the database connection with models (make sure to add your models)
+        await Tortoise.init(config=DATABASE_CONFIG)
+        await Tortoise.generate_schemas()
 
-def _parse_uri(uri: str) -> dict:
-    """
-    Parse  mysql://user:password@host:port/dbname?ssl-mode=REQUIRED
-    into a credentials dict for Tortoise's MySQL backend.
-    """
-    import re
-    m = re.match(
-        r"mysql://(?P<user>[^:]+):(?P<password>[^@]+)"
-        r"@(?P<host>[^:]+):(?P<port>\d+)/(?P<database>[^?]+)",
-        uri,
-    )
-    if not m:
-        raise ValueError(f"Cannot parse DB_URI: {uri!r}")
-    return {
-        "host":     m.group("host"),
-        "port":     int(m.group("port")),
-        "user":     m.group("user"),
-        "password": m.group("password"),
-        "database": m.group("database"),
-        "ssl":      "ssl-mode=REQUIRED" in uri,
-    }
+    async def check_database_status(self):
+        """Check Database status."""
+        try:
+            # Test the connection by executing a simple query
+            await Tortoise.get_connection("default").execute_query("SELECT 1")
 
-
-async def init_db() -> None:
-    uri = os.getenv("DB_URI")
-    if not uri:
-        raise RuntimeError("DB_URI is not set in your .env file")
-
-    creds = _parse_uri(uri)
-    TORTOISE_ORM_CONFIG["connections"]["default"]["credentials"] = creds
-
-    await Tortoise.init(config=TORTOISE_ORM_CONFIG)
-    await Tortoise.generate_schemas(safe=True)
-
-
-async def close_db() -> None:
-    await Tortoise.close_connections()
+            print(f"{self.db_engine} is up and reachable!")
+            status = True
+        except DBConnectionError as e:
+            print(f"Failed to connect to {self.db_engine}: {e}")
+            status = False
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            status = False
+            
+        return status
