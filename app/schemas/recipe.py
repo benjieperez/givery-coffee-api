@@ -6,16 +6,11 @@ REQUIRED_FIELDS = ("title", "making_time", "serves", "ingredients", "cost")
 
 
 class RecipeCreateSchema(BaseModel):
-
-    title: Optional[str] = None
-    making_time: Optional[str] = None
-    serves: Optional[str] = None
-    ingredients: Optional[str] = None
-    cost: Optional[int] = None
-
-    def is_valid(self) -> bool:
-        return all(getattr(self, f) is not None for f in REQUIRED_FIELDS)
-
+    title: str
+    making_time: str
+    serves: str
+    ingredients: str
+    cost: int
 
 class RecipeUpdateSchema(BaseModel):
 

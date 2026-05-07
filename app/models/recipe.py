@@ -3,7 +3,7 @@ from tortoise.models import Model
 
 
 class Recipe(Model):
-    id          = fields.IntField(pk=True)
+    id          = fields.IntField(primary_key=True)
     title       = fields.CharField(max_length=100)
     making_time = fields.CharField(max_length=100)
     serves      = fields.CharField(max_length=100)

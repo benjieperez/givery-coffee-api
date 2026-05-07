@@ -29,11 +29,7 @@ class RecipeRouter:
     # ------------------------------------------------------------------
 
     async def create(self, payload: RecipeCreateSchema) -> JSONResponse:
-        if not payload.is_valid():
-            return JSONResponse(status_code=200, content={
-                "message":  "Recipe creation failed!",
-                "required": "title, making_time, serves, ingredients, cost",
-            })
+
         recipe = await self._repo.create(
             title=payload.title,
             making_time=payload.making_time,
@@ -41,10 +37,14 @@ class RecipeRouter:
             ingredients=payload.ingredients,
             cost=payload.cost,
         )
-        return JSONResponse(status_code=200, content={
-            "message": "Recipe successfully created!",
-            "recipe":  [recipe.to_dict()],
-        })
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Recipe successfully created!",
+                "recipe": [recipe.to_dict()],
+            }
+        )
 
     async def get_all(self) -> JSONResponse:
         recipes = await self._repo.get_all()
